@@ -72,6 +72,7 @@ const Sound = (() => {
   };
   return {
     play(name) { if (sfx[name]) sfx[name](); },
+    note(freq, dur = 0.3) { tone(freq, dur, 'triangle', 0.12); },
     unlock: ensure,
     get muted() { return muted; },
     toggle() { muted = !muted; Store.set('muted', muted); return muted; },
@@ -132,6 +133,23 @@ const U = {
   hearts(ctx, n, max, x = 22, y = 24) {
     for (let i = 0; i < max; i++) U.emoji(ctx, i < n ? '❤️' : '🤍', x + i * 26, y, 20);
   },
+  /* 버튼: b = {x, y, w, h, label, color, size, tc} */
+  hit: (x, y, b) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h,
+  quad: (i) => ({ x: 16 + (i % 2) * 192, y: 392 + Math.floor(i / 2) * 98, w: 176, h: 84 }),
+  btn(ctx, b, down) {
+    const r = b.r || 18, o = down ? 4 : 0;
+    ctx.fillStyle = '#2B2D42'; U.rr(ctx, b.x, b.y + 5, b.w, b.h, r); ctx.fill();
+    ctx.fillStyle = b.color || '#fff'; U.rr(ctx, b.x, b.y + o, b.w, b.h, r); ctx.fill();
+    if (b.label) U.text(ctx, b.label, b.x + b.w / 2, b.y + b.h / 2 + o + 2, b.size || 30, b.tc || '#2B2D42');
+  },
+  /* 맞았어요/틀렸어요 표시: fb = {t, ok} */
+  mark(ctx, fb, y = 250) {
+    if (!fb || fb.t <= 0) return;
+    ctx.globalAlpha = Math.min(1, fb.t * 4);
+    U.emoji(ctx, fb.ok ? '⭕' : '❌', W / 2, y, 110);
+    ctx.globalAlpha = 1;
+  },
+  shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; },
   /* 남은 시간 막대 (frac: 0~1) */
   timeBar(ctx, frac, y = 16) {
     frac = Math.max(0, Math.min(1, frac));
@@ -306,6 +324,7 @@ class GameRunner {
       keys: this.keys,
       pointer: this.pointer,
       sfx: (n) => Sound.play(n),
+      note: (f, d) => Sound.note(f, d),
       get score() { return self.score; },
       set(n) { n = Math.max(0, Math.floor(n)); if (n !== self.score) { self.score = n; self.hooks.onScore(n); } },
       add(n) { api.set(self.score + n); },
