@@ -132,6 +132,13 @@ const U = {
   hearts(ctx, n, max, x = 22, y = 24) {
     for (let i = 0; i < max; i++) U.emoji(ctx, i < n ? '❤️' : '🤍', x + i * 26, y, 20);
   },
+  /* 남은 시간 막대 (frac: 0~1) */
+  timeBar(ctx, frac, y = 16) {
+    frac = Math.max(0, Math.min(1, frac));
+    ctx.fillStyle = 'rgba(255,255,255,.95)'; U.rr(ctx, 20, y, W - 40, 22, 11); ctx.fill();
+    ctx.fillStyle = frac > 0.5 ? '#00B894' : frac > 0.25 ? '#FDCB6E' : '#FF7675';
+    if (frac > 0.02) { U.rr(ctx, 23, y + 3, (W - 46) * frac, 16, 8); ctx.fill(); }
+  },
   /* 터지는 효과 */
   burst(list, x, y, color, n = 10, speed = 180) {
     for (let i = 0; i < n; i++) {
